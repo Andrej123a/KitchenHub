@@ -1,0 +1,119 @@
+﻿@model Restaurant.Web.Models.OrderCreateVm
+@{
+    ViewData["Title"] = "Create Order";
+}
+
+<h2>Create Order</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label asp-for="CustomerName" class="form-label"></label>
+            <input asp-for="CustomerName" class="form-control" />
+            <span asp-validation-for="CustomerName" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="Phone" class="form-label"></label>
+            <input asp-for="Phone" class="form-control" />
+            <span asp-validation-for="Phone" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="DeliveryAddress" class="form-label"></label>
+            <input asp-for="DeliveryAddress" class="form-control" />
+            <span asp-validation-for="DeliveryAddress" class="text-danger"></span>
+        </div>
+    </div>
+
+    <hr />
+    <h4>Items</h4>
+
+    <table class="table" id="itemsTable">
+        <thead>
+            <tr>
+                <th style="width:60%;">Menu Item</th>
+                <th style="width:20%;">Qty</th>
+                <th style="width:20%;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <select class="form-select" asp-for="Items[@i].MenuItemId" asp-items="ViewBag.MenuItems"></select>
+                        <span asp-validation-for="Items[@i].MenuItemId" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input class="form-control" asp-for="Items[@i].Quantity" />
+                        <span asp-validation-for="Items[@i].Quantity" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger" onclick="removeRow(this)">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-outline-primary" onclick="addRow()">Add item</button>
+
+    <hr />
+
+    <button type="submit" class="btn btn-success">Save Order</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+                function removeRow(btn) {
+                    const row = btn.closest('tr');
+                    row.remove();
+                    reindex();
+                }
+
+                function addRow() {
+                    const tbody = document.querySelector('#itemsTable tbody');
+                    const index = tbody.querySelectorAll('tr').length;
+
+                    const template = `
+        <tr>
+          <td>
+            <select class="form-select" name="Items[${index}].MenuItemId">
+              ${getMenuOptionsHtml()}
+            </select>
+          </td>
+          <td>
+            <input class="form-control" type="number" min="1" name="Items[${index}].Quantity" value="1" />
+          </td>
+          <td>
+            <button type="button" class="btn btn-outline-danger" onclick="removeRow(this)">Remove</button>
+          </td>
+        </tr>`;
+                    tbody.insertAdjacentHTML('beforeend', template);
+                }
+
+                function getMenuOptionsHtml() {
+                    const first = document.querySelector('#itemsTable select');
+                    return first ? first.innerHTML : '';
+                }
+
+                function reindex() {
+                    const rows = document.querySelectorAll('#itemsTable tbody tr');
+                    rows.forEach((row, idx) => {
+                        const sel = row.querySelector('select');
+                        const qty = row.querySelector('input[type="number"], input[name*=".Quantity"]');
+
+                        if (sel) sel.name = `Items[${idx}].MenuItemId`;
+                        if (qty) qty.name = `Items[${idx}].Quantity`;
+                    });
+                }
+    </script>
+}

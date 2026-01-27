@@ -1,0 +1,189 @@
+﻿@model IEnumerable<Restaurant.Domain.Entities.Order>
+@using Restaurant.Domain.Enums
+
+@{
+    ViewData["Title"] = "Orders";
+    var recentOrders = Model
+        .OrderByDescending(x => x.CreatedAt)
+        .Take(5)
+        .ToList();
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h2 class="mb-1 fw-semibold">Orders</h2>
+        <div class="text-muted small">@Model.Count() total orders</div>
+    </div>
+
+    <a class="btn btn-primary d-flex align-items-center gap-2" asp-action="Create">
+        <i class="bi bi-plus-lg"></i>
+        <span>Create New Order</span>
+    </a>
+</div>
+
+<!-- ================= STATUS CHIPS ================= -->
+<div class="d-flex flex-wrap gap-2 mb-4" id="statusChips">
+    <button class="chip active" data-status="all">
+        <i class="bi bi-grid"></i> All
+    </button>
+
+    <button class="chip chip-secondary" data-status="Pending">
+        <i class="bi bi-hourglass-split"></i> Pending
+    </button>
+
+    <button class="chip chip-warning" data-status="Preparing">
+        <i class="bi bi-fire"></i> Preparing
+    </button>
+
+    <button class="chip chip-info" data-status="OutForDelivery">
+        <i class="bi bi-truck"></i> Out for delivery
+    </button>
+
+    <button class="chip chip-success" data-status="Delivered">
+        <i class="bi bi-check-circle"></i> Delivered
+    </button>
+
+    <button class="chip chip-danger" data-status="Cancelled">
+        <i class="bi bi-x-circle"></i> Cancelled
+    </button>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No orders yet.
+    </div>
+}
+else
+{
+    <!-- ================= RECENT ORDERS ================= -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body">
+            <h5 class="mb-3 fw-semibold">
+                <i class="bi bi-clock-history me-2"></i>Recent Orders
+            </h5>
+
+            <div class="list-group list-group-flush">
+                @foreach (var o in recentOrders)
+                {
+                    var badge = o.Status switch
+                    {
+                        OrderStatus.Pending => "bg-secondary",
+                        OrderStatus.Preparing => "bg-warning",
+                        OrderStatus.OutForDelivery => "bg-info",
+                        OrderStatus.Delivered => "bg-success",
+                        OrderStatus.Cancelled => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+
+                    var total = (o.Items?.Sum(i => i.UnitPrice * i.Quantity) ?? 0m);
+
+                    <a asp-action="Details"
+                       asp-route-id="@o.Id"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center rounded-3 mb-2">
+                        <div>
+                            <div class="fw-semibold">@o.CustomerName</div>
+                            <div class="text-muted small">
+                                @o.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge rounded-pill @badge">@o.Status</span>
+                            <strong>$@total.ToString("0.00")</strong>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ALL ORDERS TABLE ================= -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Customer</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Created</th>
+                        <th class="text-end pe-3" style="width:200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var o in Model)
+                    {
+                        var badge = o.Status switch
+                        {
+                            OrderStatus.Pending => "bg-secondary",
+                            OrderStatus.Preparing => "bg-warning",
+                            OrderStatus.OutForDelivery => "bg-info",
+                            OrderStatus.Delivered => "bg-success",
+                            OrderStatus.Cancelled => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+
+                        var total = (o.Items?.Sum(i => i.UnitPrice * i.Quantity) ?? 0m);
+
+                        <tr class="o-row" data-status="@o.Status">
+                            <td class="ps-3 fw-semibold">@o.CustomerName</td>
+                            <td>@o.Phone</td>
+                            <td>
+                                <span class="badge rounded-pill @badge">@o.Status</span>
+                            </td>
+                            <td class="fw-semibold">$@total.ToString("0.00")</td>
+                            <td>@o.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group">
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@o.Id">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    @if (o.Status != OrderStatus.Delivered && o.Status != OrderStatus.Cancelled)
+                                    {
+                                        <a class="btn btn-sm btn-outline-warning" asp-action="EditStatus" asp-route-id="@o.Id">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </a>
+                                    }
+
+                                    @if (o.Status != OrderStatus.Delivered)
+                                    {
+                                        <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@o.Id">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            const chips = document.querySelectorAll('#statusChips .chip');
+            const rows = document.querySelectorAll('.o-row');
+
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    chips.forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+
+                    const status = chip.getAttribute('data-status');
+
+                    rows.forEach(r => {
+                        const rs = r.getAttribute('data-status');
+                        r.style.display =
+                            (status === 'all' || rs === status) ? '' : 'none';
+                    });
+                });
+            });
+        })();
+    </script>
+}

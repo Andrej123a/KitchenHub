@@ -1,0 +1,115 @@
+﻿@model Restaurant.Domain.Entities.MenuItem
+
+@{
+    ViewData["Title"] = "Create Menu Item";
+    bool lockCategory = (ViewBag.LockCategory as bool?) ?? false;
+}
+
+<h2>Create Menu Item</h2>
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="prefillName" value="@Context.Request.Query["prefillName"]" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <!-- ✅ Image URL + Preview -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-8">
+            <label asp-for="ImageUrl" class="form-label">Image URL</label>
+            <input asp-for="ImageUrl"
+                   id="imageUrlInput"
+                   class="form-control"
+                   placeholder="https://..."
+                   autocomplete="off" />
+            <div class="form-text">Paste an image link (JPG/PNG/WebP). Preview updates automatically.</div>
+            <span asp-validation-for="ImageUrl" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Preview</label>
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <img id="imagePreview"
+                     src="https://via.placeholder.com/600x400?text=Menu+Item"
+                     class="w-100"
+                     style="height:160px;object-fit:cover;"
+                     alt="Preview"
+                     onerror="this.onerror=null;this.src='https://via.placeholder.com/600x400?text=No+Image';" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label"></label>
+        <input asp-for="Price" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
+    </div>
+
+    <!-- ✅ CATEGORY (LOCKED IF COMING FROM CATEGORY PAGE) -->
+    <div class="mb-3">
+        <label asp-for="CategoryId" class="form-label">Category</label>
+
+        @if (lockCategory)
+        {
+            <!-- MUST: disabled/select не праќа вредност → hidden input е задолжително -->
+            <input asp-for="CategoryId" type="hidden" />
+
+            <!-- само прикажи ја категоријата -->
+            <input class="form-control" value="@ViewBag.LockedCategoryName" readonly />
+
+            <div class="form-text">
+                Category is pre-selected from Categories page.
+            </div>
+        }
+        else
+        {
+            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                <option value="">Select category...</option>
+            </select>
+        }
+
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsAvailable" class="form-check-input" />
+        <label asp-for="IsAvailable" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const input = document.getElementById('imageUrlInput');
+            const preview = document.getElementById('imagePreview');
+
+            function setPreview() {
+                const url = (input.value || '').trim();
+                preview.src = url
+                    ? url
+                    : 'https://via.placeholder.com/600x400?text=Menu+Item';
+            }
+
+            if (input && preview) {
+                input.addEventListener('input', setPreview);
+                setPreview();
+            }
+        })();
+    </script>
+}

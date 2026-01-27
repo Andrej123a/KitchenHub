@@ -1,0 +1,307 @@
+﻿@model Restaurant.Web.Models.DashboardVm
+@using Restaurant.Domain.Enums
+@using Restaurant.Service.Services
+
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var totalOrders = Model.OrdersCount;
+    decimal aov = totalOrders > 0 ? (Model.TotalRevenue / totalOrders) : 0;
+
+    int GetCount(OrderStatus s)
+        => Model.OrdersByStatus != null && Model.OrdersByStatus.ContainsKey(s) ? Model.OrdersByStatus[s] : 0;
+
+    int Percent(int count) => totalOrders == 0 ? 0 : (int)Math.Round((count * 100.0) / totalOrders);
+
+    // ✅ External API picks (TheMealDB) - passed from HomeController via ViewBag
+    var picks = ViewBag.ChefPicks as List<MealPick> ?? new List<MealPick>();
+}
+
+<div class="dashboard-page">
+
+    <!-- HERO -->
+    <div class="dash-hero mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="dash-kicker">Kitchen & delivery</div>
+                <h2 class="mb-1 fw-semibold">Today’s Snapshot</h2>
+                <div class="text-muted">
+                    Track menu performance, order flow, and revenue — everything in one place.
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-primary rounded-pill d-flex align-items-center gap-2"
+                   asp-controller="Orders" asp-action="Index">
+                    <i class="bi bi-receipt"></i> Orders
+                </a>
+                <a class="btn btn-outline-primary rounded-pill btn-dashed d-flex align-items-center gap-2"
+                   asp-controller="MenuItems" asp-action="Create">
+                    <i class="bi bi-plus-circle"></i> Add Dish
+                </a>
+            </div>
+        </div>
+
+        <div class="dash-tip mt-3">
+            <i class="bi bi-lightbulb me-2"></i>
+            Tip: Highlight bestsellers and keep them available — that’s your fastest revenue win.
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <a class="text-decoration-none text-dark" asp-controller="Categories" asp-action="Index">
+                <div class="card border-0 shadow-sm rounded-4 kpi kpi-blue h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div>
+                                <div class="text-muted small">Categories</div>
+                                <div class="fs-3 fw-semibold">@Model.CategoriesCount</div>
+                            </div>
+                            <div class="kpi-icon"><i class="bi bi-grid-3x3-gap"></i></div>
+                        </div>
+                        <div class="text-muted small mt-2">Organize your menu sections</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <a class="text-decoration-none text-dark" asp-controller="MenuItems" asp-action="Index">
+                <div class="card border-0 shadow-sm rounded-4 kpi kpi-indigo h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div>
+                                <div class="text-muted small">Menu Items</div>
+                                <div class="fs-3 fw-semibold">@Model.MenuItemsCount</div>
+                            </div>
+                            <div class="kpi-icon"><i class="bi bi-list-ul"></i></div>
+                        </div>
+                        <div class="text-muted small mt-2">
+                            Available: <span class="fw-semibold">@Model.AvailableMenuItemsCount</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <a class="text-decoration-none text-dark" asp-controller="Orders" asp-action="Index">
+                <div class="card border-0 shadow-sm rounded-4 kpi kpi-green h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between">
+                            <div>
+                                <div class="text-muted small">Orders</div>
+                                <div class="fs-3 fw-semibold">@Model.OrdersCount</div>
+                            </div>
+                            <div class="kpi-icon"><i class="bi bi-receipt"></i></div>
+                        </div>
+                        <div class="text-muted small mt-2">Track order statuses</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 kpi kpi-amber h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between">
+                        <div>
+                            <div class="text-muted small">Revenue</div>
+                            <div class="fs-3 fw-semibold">$@Model.TotalRevenue.ToString("0.00")</div>
+                        </div>
+                        <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+                    </div>
+                    <div class="text-muted small mt-2">
+                        Avg order value: <span class="fw-semibold">$@aov.ToString("0.00")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- ORDERS BY STATUS -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0 fw-semibold">Orders by status</h5>
+                        <a class="btn btn-sm btn-outline-primary rounded-pill" asp-controller="Orders" asp-action="Index">
+                            View orders <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+
+                    @{
+                        var statuses = new[]
+                        {
+                            new { Key = OrderStatus.Pending,        Label = "Pending",          Icon="bi-hourglass-split", Color="secondary" },
+                            new { Key = OrderStatus.Preparing,      Label = "Preparing",        Icon="bi-fire",           Color="warning" },
+                            new { Key = OrderStatus.OutForDelivery, Label = "Out for delivery", Icon="bi-truck",          Color="info" },
+                            new { Key = OrderStatus.Delivered,      Label = "Delivered",        Icon="bi-check-circle",   Color="success" },
+                            new { Key = OrderStatus.Cancelled,      Label = "Cancelled",        Icon="bi-x-circle",       Color="danger" }
+                        };
+                    }
+
+                    @if (totalOrders == 0)
+                    {
+                        <div class="text-muted">No orders yet.</div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var s in statuses)
+                            {
+                                var count = GetCount(s.Key);
+                                var pct = Percent(count);
+
+                                <div class="status-row">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                        <span class="fw-medium text-muted">
+                                            <i class="bi @s.Icon me-1 text-@s.Color"></i>@s.Label
+                                        </span>
+                                        <span class="text-muted">@count (@pct%)</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-@s.Color" style="width:@pct%"></div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-12 col-lg-4">
+            <!-- QUICK ACTIONS -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body">
+                    <h5 class="mb-3 fw-semibold">Quick actions</h5>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary rounded-pill d-flex justify-content-center align-items-center gap-2"
+                           asp-controller="Orders" asp-action="Index">
+                            <i class="bi bi-receipt"></i> Go to Orders
+                        </a>
+
+                        <a class="btn btn-outline-primary rounded-pill d-flex justify-content-center align-items-center gap-2 btn-dashed"
+                           asp-controller="MenuItems" asp-action="Create">
+                            <i class="bi bi-plus-circle"></i> Add Menu Item
+                        </a>
+
+                        <a class="btn btn-outline-primary rounded-pill d-flex justify-content-center align-items-center gap-2 btn-dashed"
+                           asp-controller="Categories" asp-action="Create">
+                            <i class="bi bi-plus-circle"></i> Add Category
+                        </a>
+
+                        <a class="btn btn-outline-secondary rounded-pill d-flex justify-content-center align-items-center gap-2"
+                           asp-controller="MenuItems" asp-action="Index">
+                            <i class="bi bi-list-ul"></i> View Menu Items
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ✅ CHEF'S PICKS (EXTERNAL API) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3 chef-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0 fw-semibold">Chef’s Picks</h5>
+                        <span class="badge rounded-pill chef-badge">External API</span>
+                    </div>
+                    <div class="text-muted small mb-3">
+                        Recommendations fetched from TheMealDB and shown in a curated form.
+                    </div>
+
+                    @if (!picks.Any())
+                    {
+                        <div class="text-muted">Recommendations unavailable right now.</div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-2">
+                            @foreach (var p in picks)
+                            {
+                                <div class="chef-item d-flex align-items-center gap-2">
+                                    <img class="chef-thumb"
+                                         src="@p.Thumbnail"
+                                         alt="@p.Name"
+                                         onerror="this.onerror=null;this.src='https://via.placeholder.com/120x120?text=Meal';" />
+
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold text-truncate" title="@p.Name">@p.Name</div>
+                                        <div class="text-muted small">Suggested pick</div>
+                                    </div>
+
+                                    <a class="btn btn-sm btn-primary rounded-pill"
+                                       asp-controller="MenuItems"
+                                       asp-action="Create"
+                                       asp-route-prefillName="@p.Name">
+                                        Use
+                                    </a>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mt-3">
+                            <a class="btn btn-sm btn-outline-primary rounded-pill w-100"
+                               href="https://www.themealdb.com/"
+                               target="_blank" rel="noopener">
+                                View API source <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- INSIGHTS -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <h5 class="mb-2 fw-semibold">Insights</h5>
+                    <div class="text-muted small mb-3">Quick numbers that help decisions.</div>
+
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Avg order value</span>
+                        <span class="fw-semibold">$@aov.ToString("0.00")</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <span class="text-muted">Available items</span>
+                        <span class="fw-semibold">@Model.AvailableMenuItemsCount / @Model.MenuItemsCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center py-2">
+                        <span class="text-muted">Delivery success</span>
+                        <span class="fw-semibold">@((totalOrders == 0) ? "—" : $"{Percent(GetCount(OrderStatus.Delivered))}%")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOP SELLING ITEM (separate card) -->
+            @if (!string.IsNullOrWhiteSpace(Model.TopItemName))
+            {
+                <div class="card border-0 shadow-sm rounded-4 mt-3 top-selling-card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="top-item-img">
+                                <img src="@(string.IsNullOrWhiteSpace(Model.TopItemImageUrl)
+                                             ? "https://via.placeholder.com/120x120?text=Food"
+                                             : Model.TopItemImageUrl)"
+                                     alt="Top item" />
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <div class="text-muted small">🔥 Top selling item</div>
+                                <h5 class="mb-1 fw-semibold">@Model.TopItemName</h5>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge rounded-pill text-bg-success">@Model.TopItemQuantity sold</span>
+                                    <span class="text-muted small">Most ordered dish</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

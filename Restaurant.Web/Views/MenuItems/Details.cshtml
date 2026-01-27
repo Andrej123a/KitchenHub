@@ -1,0 +1,174 @@
+﻿@model Restaurant.Domain.Entities.MenuItem
+
+@{
+    ViewData["Title"] = "Menu Item Details";
+
+    var categoryName = Model.Category?.Name ?? "—";
+    var availText = Model.IsAvailable ? "Available" : "Unavailable";
+    var availBadge = Model.IsAvailable ? "bg-success-subtle text-success border-success-subtle" : "bg-secondary-subtle text-secondary border-secondary-subtle";
+
+    var img = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "https://via.placeholder.com/900x600?text=Menu+Item"
+        : Model.ImageUrl;
+}
+
+<div class="details-shell">
+    <div class="card details-card border-0 shadow-sm rounded-4 overflow-hidden">
+
+        <!-- HEADER / HERO -->
+        <div class="details-hero">
+            <img src="@img"
+                 class="details-img"
+                 alt="@Model.Name"
+                 onerror="this.onerror=null;this.src='https://via.placeholder.com/900x600?text=No+Image';" />
+
+            <div class="details-overlay"></div>
+
+            <div class="details-hero-content">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge rounded-pill border @availBadge">@availText</span>
+                    <span class="badge rounded-pill border category-badge">
+                        <i class="bi bi-tag me-1"></i>@categoryName
+                    </span>
+                </div>
+
+                <h2 class="mt-2 mb-1 details-title">@Model.Name</h2>
+                <div class="details-subtitle">
+                    <span class="price-chip">$@Model.Price.ToString("0.00")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-12 col-lg-8">
+                    <h5 class="mb-2">Description</h5>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        <p class="text-muted mb-0">@Model.Description</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0 fst-italic">No description provided.</p>
+                    }
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="meta-card rounded-4 p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Status</span>
+                            <span class="fw-semibold">@availText</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">Category</span>
+                            <span class="fw-semibold">@categoryName</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Price</span>
+                            <span class="fw-semibold">$@Model.Price.ToString("0.00")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary"
+                   asp-action="Edit"
+                   asp-route-id="@Model.Id">
+                    <i class="bi bi-pencil me-2"></i>Edit
+                </a>
+
+                <a class="btn btn-outline-primary"
+                   asp-action="Index">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+
+                <a class="btn btn-outline-danger ms-auto"
+                   asp-action="Delete"
+                   asp-route-id="@Model.Id">
+                    <i class="bi bi-trash me-2"></i>Delete
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .details-shell {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .details-card {
+            overflow: hidden;
+        }
+
+        .details-hero {
+            position: relative;
+            height: 280px;
+            background: #0f2a24;
+        }
+
+        .details-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: saturate(1.05) contrast(1.02);
+            transform: scale(1.02);
+        }
+
+        .details-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.55));
+        }
+
+        .details-hero-content {
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 18px;
+            color: #fff;
+        }
+
+        .details-title {
+            font-family: "Playfair Display", serif;
+            letter-spacing: -0.02em;
+            text-shadow: 0 10px 30px rgba(0,0,0,.35);
+        }
+
+        .details-subtitle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .price-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: rgba(201,162,77,.20);
+            border: 1px solid rgba(201,162,77,.35);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .category-badge {
+            background: rgba(201,162,77,.14);
+            border-color: rgba(201,162,77,.35) !important;
+            color: #e4c77a;
+        }
+
+        .meta-card {
+            background: rgba(15,42,36,.06);
+            border: 1px solid rgba(0,0,0,.06);
+        }
+    </style>
+}
