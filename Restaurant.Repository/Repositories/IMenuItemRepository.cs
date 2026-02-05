@@ -2,7 +2,6 @@
 
 namespace Restaurant.Repository.Repositories
 {
-    // Договор за работа со MenuItem во база
     public interface IMenuItemRepository
     {
         Task<List<MenuItem>> GetAllAsync();

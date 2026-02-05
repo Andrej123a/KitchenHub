@@ -11,9 +11,6 @@ namespace Restaurant.Web.Controllers
         private readonly IMenuItemService _menuItemService;
         private readonly IOrderService _orderService;
 
-        // ✅ NEW: External API service (TheMealDB) for “Chef’s Picks”
-        // Idea: we fetch meals from an external API, then we show only 3 curated picks on the dashboard
-        // (this is the "transformed" presentation, not raw API JSON).
         private readonly IMealRecommendationService _mealRecService;
 
         public HomeController(
@@ -26,7 +23,6 @@ namespace Restaurant.Web.Controllers
             _menuItemService = menuItemService;
             _orderService = orderService;
 
-            // ✅ NEW: save injected external API service
             _mealRecService = mealRecService;
         }
 
@@ -36,7 +32,7 @@ namespace Restaurant.Web.Controllers
             var menuItems = await _menuItemService.GetAllAsync();
             var orders = await _orderService.GetAllAsync();
 
-            // Total revenue = sum of (sum of line totals per order)
+            // Total revenue 
             var totalRevenue = orders.Sum(o =>
                 (o.Items?.Sum(i => i.UnitPrice * i.Quantity) ?? 0m)
             );
@@ -53,7 +49,6 @@ namespace Restaurant.Web.Controllers
                     .ToDictionary(g => g.Key, g => g.Count())
             };
 
-            // Make sure all statuses exist in dictionary (so UI won't crash)
             foreach (OrderStatus s in Enum.GetValues(typeof(OrderStatus)))
                 if (!vm.OrdersByStatus.ContainsKey(s))
                     vm.OrdersByStatus[s] = 0;
@@ -67,12 +62,8 @@ namespace Restaurant.Web.Controllers
                 vm.TopItemQuantity = topItem.Value.qty;
             }
 
-            // ✅ NEW: External API integration (TheMealDB)
-            // We fetch 3 "Chef’s Picks" from an external API and show them on the dashboard as recommendations.
-            // This fulfills the requirement: external API -> data -> transformed UI output.
             var picks = await _mealRecService.GetChefPicksAsync(3);
 
-            // We pass them to the view using ViewBag (quick and safe; no DB/model changes needed).
             ViewBag.ChefPicks = picks;
 
             return View(vm);

@@ -2,7 +2,6 @@
 
 namespace Restaurant.Service.Services
 {
-    // Договор за бизнис операции со MenuItem
     public interface IMenuItemService
     {
         Task<List<MenuItem>> GetAllAsync();

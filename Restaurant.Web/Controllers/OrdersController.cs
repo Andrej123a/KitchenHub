@@ -47,7 +47,6 @@ namespace Restaurant.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(OrderCreateVm vm)
         {
-            // исфрли празни редови
             vm.Items = (vm.Items ?? new List<OrderItemCreateVm>())
                 .Where(i => i.MenuItemId != Guid.Empty && i.Quantity > 0)
                 .ToList();
@@ -61,7 +60,6 @@ namespace Restaurant.Web.Controllers
                 return View(vm);
             }
 
-            // земи мени од база за да ја земеме цената server-side
             var menuItems = await _menuItemService.GetAllAsync();
             var menuDict = menuItems.ToDictionary(m => m.Id, m => m);
 
@@ -125,7 +123,6 @@ namespace Restaurant.Web.Controllers
             if (order == null)
                 return NotFound();
 
-            // веќе е завршена/откажана - не дозволуваме промена
             if (order.Status == OrderStatus.Delivered || order.Status == OrderStatus.Cancelled)
                 return RedirectToAction(nameof(Details), new { id = vm.Id });
 
@@ -161,7 +158,6 @@ namespace Restaurant.Web.Controllers
             if (order == null)
                 return RedirectToAction(nameof(Index));
 
-            // 🚫 Забрана за бришење ако е доставена
             if (order.Status == OrderStatus.Delivered)
                 return RedirectToAction(nameof(Details), new { id });
 

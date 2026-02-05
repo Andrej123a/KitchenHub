@@ -4,7 +4,6 @@ using Restaurant.Repository.Data;
 
 namespace Restaurant.Repository.Repositories
 {
-    // Реална имплементација со EF Core
     public class MenuItemRepository : IMenuItemRepository
     {
         private readonly AppDbContext _context;
@@ -16,7 +15,6 @@ namespace Restaurant.Repository.Repositories
 
         public async Task<List<MenuItem>> GetAllAsync()
         {
-            // Include(Category) за да се вчитува и категоријата при листање
             return await _context.MenuItems
                 .Include(m => m.Category)
                 .AsNoTracking()

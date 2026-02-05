@@ -10,7 +10,6 @@ namespace Restaurant.Web.Controllers
         private readonly IMenuItemService _menuItemService;
         private readonly ICategoryService _categoryService;
 
-        // ✅ External API (TheMealDB) - used for Dashboard "Use" -> auto-fill Create form
         private readonly IMealRecommendationService _mealRecService;
 
         public MenuItemsController(
@@ -23,7 +22,6 @@ namespace Restaurant.Web.Controllers
             _mealRecService = mealRecService;
         }
 
-        // ✅ Filter by category when categoryId is provided
         public async Task<IActionResult> Index(Guid? categoryId)
         {
             var items = await _menuItemService.GetAllAsync();
@@ -52,9 +50,6 @@ namespace Restaurant.Web.Controllers
             return View(item);
         }
 
-        // ✅ Create (GET)
-        // - categoryId: ако дојдеме од конкретна категорија -> lock category
-        // - prefillName: ако дојдеме од Dashboard "Chef’s Picks" -> auto-fill Name/Image/Description from external API
         public async Task<IActionResult> Create(Guid? categoryId, string? prefillName)
         {
             await LoadCategories(categoryId);
@@ -65,8 +60,6 @@ namespace Restaurant.Web.Controllers
                 Name = prefillName ?? string.Empty
             };
 
-            // ✅ NEW (IMPORTANT): Auto-fill from TheMealDB using the picked name
-            // This satisfies "external API integration + transformed data".
             if (!string.IsNullOrWhiteSpace(prefillName))
             {
                 var details = await _mealRecService.GetMealDetailsByNameAsync(prefillName);
@@ -82,7 +75,6 @@ namespace Restaurant.Web.Controllers
             {
                 item.CategoryId = categoryId.Value;
 
-                // Keep locked category name for readonly display in Create.cshtml
                 if (ViewBag.Categories is SelectList list)
                 {
                     var selected = list.FirstOrDefault(x => x.Value == categoryId.Value.ToString());
@@ -103,11 +95,9 @@ namespace Restaurant.Web.Controllers
 
             item.Description ??= string.Empty;
 
-            // 🔒 If we came from category page, force the category on POST too
             if (categoryId.HasValue)
                 item.CategoryId = categoryId.Value;
 
-            // ✅ Validate category
             if (item.CategoryId == Guid.Empty)
                 ModelState.AddModelError(nameof(item.CategoryId), "Category is required.");
 
@@ -124,8 +114,6 @@ namespace Restaurant.Web.Controllers
                     ViewBag.LockedCategoryName = selected?.Text;
                 }
 
-                // ✅ Keep prefilled API fields if user got here from Dashboard and validation failed
-                // (prevents losing image/description on re-render)
                 if (!string.IsNullOrWhiteSpace(prefillName) && string.IsNullOrWhiteSpace(item.ImageUrl))
                 {
                     var details = await _mealRecService.GetMealDetailsByNameAsync(prefillName);

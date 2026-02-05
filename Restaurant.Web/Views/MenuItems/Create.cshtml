@@ -24,7 +24,6 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
-    <!-- ✅ Image URL + Preview -->
     <div class="row g-3 mb-3">
         <div class="col-md-8">
             <label asp-for="ImageUrl" class="form-label">Image URL</label>
@@ -56,16 +55,13 @@
         <span asp-validation-for="Price" class="text-danger"></span>
     </div>
 
-    <!-- ✅ CATEGORY (LOCKED IF COMING FROM CATEGORY PAGE) -->
     <div class="mb-3">
         <label asp-for="CategoryId" class="form-label">Category</label>
 
         @if (lockCategory)
         {
-            <!-- MUST: disabled/select не праќа вредност → hidden input е задолжително -->
             <input asp-for="CategoryId" type="hidden" />
 
-            <!-- само прикажи ја категоријата -->
             <input class="form-control" value="@ViewBag.LockedCategoryName" readonly />
 
             <div class="form-text">

@@ -39,11 +39,9 @@ namespace Restaurant.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Category category)
         {
-            // Сигурно генерирање Guid пред валидација (ако некогаш додадеш правила за Id)
             if (category.Id == Guid.Empty)
                 category.Id = Guid.NewGuid();
 
-            // Ако Description ти е non-nullable, да не падне на null
             category.Description ??= string.Empty;
 
             if (!ModelState.IsValid)

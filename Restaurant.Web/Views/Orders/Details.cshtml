@@ -27,7 +27,6 @@
     var items = Model.Items ?? Enumerable.Empty<Restaurant.Domain.Entities.OrderItem>();
     var total = items.Sum(i => i.UnitPrice * i.Quantity);
 
-    // Timeline steps
     var steps = new[] { OrderStatus.Pending, OrderStatus.Preparing, OrderStatus.OutForDelivery, OrderStatus.Delivered };
     var currentIndex = Array.IndexOf(steps, Model.Status);
     var isCancelled = Model.Status == OrderStatus.Cancelled;
@@ -68,7 +67,6 @@
 </div>
 
 <div class="row g-3">
-    <!-- LEFT: ORDER INFO + TIMELINE -->
     <div class="col-12 col-lg-5">
         <div class="card border-0 shadow-sm rounded-4 mb-3">
             <div class="card-body">
@@ -112,7 +110,6 @@
             </div>
         </div>
 
-        <!-- TIMELINE -->
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -161,7 +158,6 @@
         </div>
     </div>
 
-    <!-- RIGHT: ITEMS (WITH THUMBNAILS) -->
     <div class="col-12 col-lg-7">
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="card-body">
@@ -195,7 +191,6 @@
 
     <tr>
         <td class="ps-3">
-            <!-- CLICK IMAGE -> Menu Item Details -->
             <a class="thumb-wrapper thumb-link"
                asp-controller="MenuItems"
                asp-action="Details"
@@ -209,7 +204,6 @@
         </td>
 
         <td>
-            <!-- CLICK NAME -> Menu Item Details -->
             <a class="fw-semibold text-decoration-none item-link"
                asp-controller="MenuItems"
                asp-action="Details"

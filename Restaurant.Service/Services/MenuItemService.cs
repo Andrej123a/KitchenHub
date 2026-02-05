@@ -3,7 +3,6 @@ using Restaurant.Repository.Repositories;
 
 namespace Restaurant.Service.Services
 {
-    // Бизнис логика за MenuItem (засега само рутирање кон Repository)
     public class MenuItemService : IMenuItemService
     {
         private readonly IMenuItemRepository _menuItemRepository;

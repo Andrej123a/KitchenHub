@@ -4,12 +4,10 @@ using Restaurant.Repository.Data;
 
 namespace Restaurant.Repository.Repositories
 {
-    // Реална имплементација на ICategoryRepository со EF Core (AppDbContext)
     public class CategoryRepository : ICategoryRepository
     {
         private readonly AppDbContext _context;
 
-        // DbContext доаѓа преку DI
         public CategoryRepository(AppDbContext context)
         {
             _context = context;
@@ -17,7 +15,6 @@ namespace Restaurant.Repository.Repositories
 
         public async Task<List<Category>> GetAllAsync()
         {
-            // AsNoTracking = побрзо за read-only листи
             return await _context.Categories.AsNoTracking().ToListAsync();
         }
 
@@ -26,11 +23,7 @@ namespace Restaurant.Repository.Repositories
             return await _context.Categories.FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        //public async Task AddAsync(Category category)
-        //{
-        //    _context.Categories.Add(category);
-        //    await _context.SaveChangesAsync();
-        //}
+      
         public async Task AddAsync(Category category)
         {
             Console.WriteLine(">>> ADDING CATEGORY: " + category.Name + " | ID=" + category.Id);
